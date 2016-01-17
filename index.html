@@ -1,0 +1,110 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+ <html>
+ <head>
+ <link rel='stylesheet' type='text/css' href='style/fullcalendar.css' />
+ <link rel='stylesheet' type='text/css' href='style/fullcalendar.print.css' media='print' />
+ <script type='text/javascript' src='js/jquery-1.7.1.min.js'></script>
+ <script type='text/javascript' src='js/jquery-ui-1.8.17.custom.min.js'></script>
+ <script type='text/javascript' src='js/fullcalendar.min.js'></script>
+ <script type='text/javascript' src='js/gcal.js'></script>
+ <script type='text/javascript' src='js/fullcalendar.config.js'></script>
+ <style type='text/css'>
+ body {
+  margin-top: 40px;
+  text-align: center;
+  font-size: 14px;
+  font-family: 微软雅黑;
+  background:#fff;
+  }
+ #loading {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  }
+ #calendar {
+  width: 450px;
+  margin: 0 auto;
+  }
+</style>
+<script>
+$(document).ready(function() {
+  var date = new Date();
+  var d = date.getDate();
+  var m = date.getMonth();
+  var y = date.getFullYear();
+  var calendar = $('#calendar').fullCalendar({
+   header: {
+    left: 'prev,next today',
+    center: 'title',
+    right: 'month,agendaWeek,agendaDay'
+   },
+   buttonText:{
+     prev:     '上翻',
+     next:     '下翻',
+     prevYear: '去年',
+     nextYear: '明年',
+     today:    '今天',
+     month:    '月',
+     week:     '周',
+     day:      '日'
+     },
+   aspectRatio:0.9,
+   allDayDefault:true,
+   selectable: true,
+   selectHelper: true,
+   select: function(start, end,allDay) {
+    var title = prompt('请输入日程:');
+    if (title) {
+     $.post("index.php?action=schedule&func=add",{starttime:start.getTime(),endtime:end.getTime(),title:title},function(data){alert(data)}); 
+     calendar.fullCalendar('renderEvent',
+      {
+       title: title,
+       start: start,
+       end: end,
+       allDay: allDay
+      },
+      true // make the event "stick"
+     );
+     
+    }
+    calendar.fullCalendar('unselect');
+   },
+   editable: true,
+   eventSources: [//增加多个源
+       {
+           url: 'index.php?action=schedule&func=article-event',
+           color:'red',
+           editable:false
+       },
+       {
+           url: 'index.php?action=schedule&func=event',
+          
+       },
+                  {
+                      url: 'http://www.google.com/calendar/feeds/usa__en@holiday.calendar.google.com/public/basic',
+                      cache: true,
+                      color: 'yellow', 
+                     textColor: 'black' 
+                  }
+              ],
+   
+   eventDrop: function(event, delta) {
+    $.post("index.php?action=schedule&func=update",{eventId:event['id'],delta:delta});
+  },
+  slotMinutes:120,
+   defaultEventMinutes:120,
+   loading: function(bool) {
+    if (bool) $('#loading').show();
+    else $('#loading').hide();
+   },
+   weekends:true 
+   });
+ });
+ </script>
+ </head>
+ <body>
+ <div id='loading' style='display:none'>loading...</div>
+ <div id='calendar'></div>
+ <div id='text'></div>
+ </body>
+ </html>
